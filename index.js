@@ -182,7 +182,9 @@ app.post("/gmail/webhook", async (req, res) => {
       return;
     }
 
-    await handleHistoryUpdate(historyId);
+    await handleHistoryUpdate(historyId).catch((err) => {
+      console.error("Error handling history update:", err);
+    });
     res.sendStatus(204);
   } catch (err) {
     console.error("Webhook error:", err);
