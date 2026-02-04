@@ -67,7 +67,6 @@ async function handleHistoryUpdate(newHistoryId) {
     }
 
     const parsed = await parseEmail(msg.data, {
-      withAttachments: true,
       gmail,
       userId: "me",
     });
@@ -129,6 +128,7 @@ ${normalizeEmailHtml(parsed.content)}`
       content: `${parsed.labels.includes("IMPORTANT") ? `${user}` : ``}
 # 📧 New Email Received. 
 **From:** ${parsed.from}  
+**To:** ${parsed.to}
 ## ${parsed.subject || "(no subject)"}  
 
 **Summary:**  
