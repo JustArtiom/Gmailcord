@@ -39,22 +39,38 @@ async function handleHistoryUpdate(newHistoryId) {
   });
 
   const histories = res.data.history || [];
-  const messageIds = [];
+  const messageIds = new Set();
 
   for (const h of histories) {
     if (h.messagesAdded) {
       for (const m of h.messagesAdded) {
-        messageIds.push(m.message.id);
+        if (m?.message?.id) {
+          messageIds.add(m.message.id);
+        }
       }
     }
   }
 
   for (const messageId of messageIds) {
-    const msg = await gmail.users.messages.get({
-      userId: "me",
-      id: messageId,
-      format: "full",
-    });
+    let msg;
+
+    try {
+      msg = await gmail.users.messages.get({
+        userId: "me",
+        id: messageId,
+        format: "full",
+      });
+    } catch (err) {
+      // Gmail can emit history entries for messages that are deleted (or moved out of filtered labels)
+      // before we fetch them. Skip 404s so the watcher keeps running instead of bailing out.
+      const status = err?.code || err?.response?.status;
+      if (status === 404) {
+        console.warn(`Message ${messageId} not found; skipping.`);
+        continue;
+      }
+
+      throw err;
+    }
 
     const labels = msg.data.labelIds || [];
 
