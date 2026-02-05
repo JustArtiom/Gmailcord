@@ -85,8 +85,21 @@ export const parseEmail = async(message,{ withAttachments = false,gmail,userId =
 }
 
 
+export function truncateUrls(text, maxUrlLength = 1000) {
+  if (!text) return text;
+
+  return text.replace(
+    /\[(https?:\/\/[^\s\]]+)\]/gi,
+    (_, url) => {
+      if (url.length <= maxUrlLength) return `[${url}]`;
+      return `[${url.slice(0, maxUrlLength)}…(sliced)]`;
+    }
+  );
+}
+
+
 export function normalizeEmailHtml(html) {
-  return htmlToText(html, {
+  const text = htmlToText(html, {
     wordwrap: false,
     selectors: [
       { selector: "img", format: "skip" },
@@ -96,4 +109,8 @@ export function normalizeEmailHtml(html) {
       maxInputLength: 50_000, // safety
     },
   });
+
+  return truncateUrls(text);
 }
+
+console.log(normalizeEmailHtml(`<p>Hello <b>world</b>! Visit <a href="https://example.com">our site</a>.</p><img src="image.jpg" />`))
